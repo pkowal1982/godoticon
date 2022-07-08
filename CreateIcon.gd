@@ -138,7 +138,7 @@ class IconCreator:
 		result.append(0x0) # reserved
 		result.append_array(lsb_first(0, 2)) # no color planes
 		result.append_array(lsb_first(32, 2)) # bits per pixel
-		result.append_array(lsb_first(size)) # size of embedded png 
+		result.append_array(lsb_first(size)) # size of embedded png
 		result.append_array(lsb_first(offset))
 		return result
 
