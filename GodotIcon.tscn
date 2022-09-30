@@ -3,4 +3,4 @@
 [ext_resource type="Script" path="res://GodotIcon.gd" id="1"]
 
 [node name="GodotIcon" type="Node"]
-script = ExtResource( "1" )
+script = ExtResource("1")

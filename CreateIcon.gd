@@ -1,3 +1,4 @@
+class_name CreateIcon
 extends SceneTree
 
 
@@ -8,9 +9,10 @@ func _init() -> void:
 			"Usage:\n  godot -s CreateIcon.gd name <file>...\n",
 			"\n",
 			"Creates uncompressed windows ico file.\n",
+			"Add --headless to hide Godot console.\n",
 			"\n",
 			"Arguments:\n",
-			"  godot  path to Godot 3.x executable\n",
+			"  godot  path to Godot 4 beta2+ executable\n",
 			"  name   path to created icon\n",
 			"  <file> provide one or six files. If one provided it will be scaled for all\n",
 			"         icon resolutions. Multiple files should be 16x16, 32x32, 48x48, 64x64,\n",
@@ -74,14 +76,12 @@ func prepare_images(path: String) -> Array:
 
 
 func save_icon(destination_path: String, images: Array) -> void:
-	var file = File.new()
-	var error = file.open(destination_path, File.WRITE)
-	if error:
-		print("Could not open file for writing!")
+	var file = FileAccess.open(destination_path, FileAccess.WRITE)
+	if not file:
+		print("Could not open file for writing!\n", file.get_open_error())
 		return
 	var icon_creator := IconCreator.new()
 	file.store_buffer(icon_creator.generate_icon(images))
-	file.close()
 
 
 static func sort_images_by_size(a: Image, b: Image) -> bool:

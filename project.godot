@@ -8,13 +8,29 @@
 
 config_version=5
 
+_global_script_classes=[{
+"base": "SceneTree",
+"class": &"CreateIcon",
+"language": &"GDScript",
+"path": "res://CreateIcon.gd"
+}, {
+"base": "SceneTree",
+"class": &"ReplaceIcon",
+"language": &"GDScript",
+"path": "res://ReplaceIcon.gd"
+}]
+_global_script_class_icons={
+"CreateIcon": "",
+"ReplaceIcon": ""
+}
+
 [application]
 
 config/name="Godot Icon"
 run/main_scene="res://GodotIcon.tscn"
+config/features=PackedStringArray("4.0")
 config/icon="res://image/djbird.png"
 config/windows_native_icon="res://image/djbird.ico"
-config/features=PackedStringArray("4.0")
 
 [physics]
 

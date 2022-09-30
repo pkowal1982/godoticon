@@ -4,8 +4,8 @@ const CreateIcon := preload("res://CreateIcon.gd")
 const ReplaceIcon := preload("res://ReplaceIcon.gd")
 
 # TODO fix type
-var icon_creator #: CreateIcon.IconCreator
-var icon_replacer #: ReplaceIcon.IconReplacer
+var icon_creator: CreateIcon.IconCreator
+var icon_replacer: ReplaceIcon.IconReplacer
 var image: Image
 var headers: PackedByteArray
 var resources: PackedByteArray
@@ -16,13 +16,13 @@ func _init() -> void:
 	icon_replacer = ReplaceIcon.IconReplacer.new()
 	image = Image.new()
 	image.create_from_data(1, 1, false, Image.FORMAT_RGBA8, PackedByteArray([0x12, 0x34, 0x56, 0xff]))
-	var file := File.new()
-	assert(not file.open("res://bin/headers.bin", File.READ))
+	var file := FileAccess.open("res://bin/headers.bin", FileAccess.READ)
+	assert(file)
 	headers = file.get_buffer(2048)
-	file.close()
-	assert(not file.open("res://bin/resources.bin", File.READ))
+	# TODO should use file = null instead of close?
+	file = FileAccess.open("res://bin/resources.bin", FileAccess.READ)
+	assert(file)
 	resources = file.get_buffer(360960)
-	file.close()
 
 
 func _ready():
@@ -189,7 +189,7 @@ func test_find_data_entries() -> void:
 func test_find_icon_offset() -> void:
 	var data_entries := [ReplaceIcon.DataEntry.new(PackedByteArray([2, 2, 0, 0, 0, 0x1, 0, 0]))]
 	# TODO assert with error message
-	assert(0x100) #, icon_replacer.find_icon_offset(data_entries, 0x100, 0x102))
+	assert(0x100 == icon_replacer.find_icon_offset(data_entries, 0x100, 0x102))
 
 
 func test_has_data_entry_with_size() -> void:
@@ -199,10 +199,9 @@ func test_has_data_entry_with_size() -> void:
 
 
 func test_replace_icons() -> void:
-	var file := File.new()
-	assert(not file.open("res://image/djbird.ico", File.READ))
+	var file := FileAccess.open("res://image/djbird.ico", FileAccess.READ)
+	assert(file)
 	var images := ReplaceIcon.Icon.new(file.get_buffer(ReplaceIcon.ICON_SIZE)).images
-	file.close()
 	assert(images.size() == 6)
 	# TODO fix type infering
 	var resources_section_entry: ReplaceIcon.SectionEntry = icon_replacer.find_resources_section_entry(headers)

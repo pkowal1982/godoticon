@@ -1,3 +1,4 @@
+class_name ReplaceIcon
 extends SceneTree
 
 const ICON_SIZE := 359559
@@ -11,9 +12,10 @@ func _init() -> void:
 			"  godot -s ReplaceIcon.gd icon name\n",
 			"\n",
 			"Replaces ico file in windows PE32+ executable.\n",
+			"Add --headless to hide Godot console.\n",
 			"\n",
 			"Arguments:\n",
-			"  godot  path to Godot 3.x executable\n",
+			"  godot  path to Godot 4 beta2+ executable\n",
 			"  icon   path to new icon\n",
 			"  name   path to modified PE32+ executable\n"
 		)
@@ -25,19 +27,14 @@ func _init() -> void:
 
 func replace_icon(executable_path: String, icon_path: String) -> void:
 	var icon_replacer := IconReplacer.new()
-	var file := File.new()
-	var error = file.open(icon_path, File.READ)
-	if error:
-		printerr("Could not open icon file!")
-		return
-	var images := Icon.new(file.get_buffer(ICON_SIZE)).images
-	file.close()
 
-	error = file.open(executable_path, File.READ_WRITE)
-	if error:
+	var images := get_images(icon_path)
+
+	var executable_file := FileAccess.open(executable_path, FileAccess.READ_WRITE)
+	if not executable_file:
 		printerr("Could not open executable file!")
 		return
-	var headers := file.get_buffer(2048)
+	var headers := executable_file.get_buffer(2048)
 	var resources_section_entry := icon_replacer.find_resources_section_entry(headers)
 	if not resources_section_entry:
 		return
@@ -45,14 +42,21 @@ func replace_icon(executable_path: String, icon_path: String) -> void:
 		printerr("Could not find icons in executable. Wrong template?")
 		return
 
-	file.seek(resources_section_entry.pointer_to_raw_data)
-	var resources := file.get_buffer(resources_section_entry.size_of_raw_data)
+	executable_file.seek(resources_section_entry.pointer_to_raw_data)
+	var resources := executable_file.get_buffer(resources_section_entry.size_of_raw_data)
 	
 	resources = icon_replacer.replace_icons(resources, resources_section_entry.virtual_address, images)
 	if not resources.is_empty():
-		file.seek(resources_section_entry.pointer_to_raw_data)
-		file.store_buffer(resources)
-	file.close()
+		executable_file.seek(resources_section_entry.pointer_to_raw_data)
+		executable_file.store_buffer(resources)
+
+
+func get_images(icon_path: String) -> Dictionary:
+	var file := FileAccess.open(icon_path, FileAccess.READ)
+	if not file:
+		printerr("Could not open icon file!\n", file.get_open_error())
+		return {}
+	return Icon.new(file.get_buffer(ICON_SIZE)).images
 
 
 class IconReplacer:
