@@ -11,6 +11,7 @@ func _init() -> void:
 			"  godot -s ReplaceIcon.gd icon name\n",
 			"\n",
 			"Replaces ico file in windows PE32+ executable.\n",
+			"Add --no-window to hide Godot console.\n",
 			"\n",
 			"Arguments:\n",
 			"  godot  path to Godot 3.x executable\n",

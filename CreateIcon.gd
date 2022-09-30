@@ -8,6 +8,7 @@ func _init() -> void:
 			"Usage:\n  godot -s CreateIcon.gd name <file>...\n",
 			"\n",
 			"Creates uncompressed windows ico file.\n",
+			"Add --no-window to hide Godot console.\n",
 			"\n",
 			"Arguments:\n",
 			"  godot  path to Godot 3.x executable\n",
