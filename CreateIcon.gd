@@ -1,5 +1,8 @@
 extends SceneTree
 
+var error_handler: Object
+var error_callback: String
+
 
 func _init() -> void:
 	var arguments = OS.get_cmdline_args()
@@ -25,7 +28,7 @@ func _init() -> void:
 		var check_names := {}
 		for name in names:
 			if check_names.has(name):
-				printerr("File ", name, " was added more than once")
+				print_error(str("File ", name, " was added more than once"))
 				return
 			check_names[name] = true
 		images = load_images(names)
@@ -42,7 +45,7 @@ func load_images(paths: Array) -> Array:
 		var image := Image.new()
 		var error = image.load(path)
 		if error:
-			printerr("Could not load image: ", path)
+			print_error(str("Could not load image: ", path))
 			return []
 		image.convert(Image.FORMAT_RGBA8)
 		images.append(image)
@@ -51,10 +54,10 @@ func load_images(paths: Array) -> Array:
 	for size in [16, 32, 48, 64, 128, 256]:
 		var image: Image = images[index]
 		if image.get_width() != size:
-			printerr("Image has incorrect width: ", image.get_width(), " expected: ", size)
+			print_error(str("Image has incorrect width: ", image.get_width(), " expected: ", size))
 			return []
 		if image.get_height() != size:
-			printerr("Image has incorrect height: ", image.get_height(), " expected: ", size)
+			print_error(str("Image has incorrect height: ", image.get_height(), " expected: ", size))
 			return []
 		index += 1
 	return images
@@ -66,7 +69,7 @@ func prepare_images(path: String) -> Array:
 		var image := Image.new()
 		var error = image.load(path)
 		if error:
-			printerr("Could not load image: ", path)
+			print_error(str("Could not load image: ", path))
 			return []
 		image.convert(Image.FORMAT_RGBA8)
 		image.resize(size, size)
@@ -78,11 +81,17 @@ func save_icon(destination_path: String, images: Array) -> void:
 	var file = File.new()
 	var error = file.open(destination_path, File.WRITE)
 	if error:
-		print("Could not open file for writing!")
+		print_error(str("Could not open ", destination_path, " for writing!"))
 		return
 	var icon_creator := IconCreator.new()
 	file.store_buffer(icon_creator.generate_icon(images))
 	file.close()
+
+
+func print_error(error_message: String) -> void:
+	printerr(error_message)
+	if error_handler and error_callback:
+		error_handler.call(error_callback, error_message)
 
 
 static func sort_images_by_size(a: Image, b: Image) -> bool:

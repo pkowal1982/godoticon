@@ -202,6 +202,35 @@ func test_replace_icons() -> void:
 	assert_array_equals(images[1108], resources.subarray(0x1f0, 0x1f0 + 1108 - 1))
 
 
+func test_create_icon_error_handling() -> void:
+	var error_message = "Create icon test error message!"
+	var error_handler := ErrorHandler.new()
+	var create_icon := CreateIcon.new()
+	create_icon.error_handler = error_handler
+	create_icon.error_callback = "handle"
+	create_icon.print_error(error_message)
+	assert_equals(error_message, error_handler.error_message)
+
+
+func test_replace_icon_error_handling() -> void:
+	var error_message = "Replace icon test error message!"
+	var error_handler := ErrorHandler.new()
+	var replace_icon := CreateIcon.new()
+	replace_icon.error_handler = error_handler
+	replace_icon.error_callback = "handle"
+	replace_icon.print_error(error_message)
+	assert_equals(error_message, error_handler.error_message)
+
+
+func test_icon_replacer_error_handling() -> void:
+	var error_message = "Icon replacer test error message!"
+	var error_handler := ErrorHandler.new()
+	icon_replacer.error_handler = error_handler
+	icon_replacer.error_callback = "handle"
+	icon_replacer.print_error(error_message)
+	assert_equals(error_message, error_handler.error_message)
+
+
 func has_data_entry_with_size(data_entries: Array, size: int) -> bool:
 	for data_entry in data_entries:
 		if data_entry.size == size:
@@ -215,3 +244,11 @@ func zlib_stream_size(size: int) -> int:
 	if filtered_pixels_size % icon_creator.ZLIB_BLOCK_SIZE:
 		block_count += 1
 	return 2 + filtered_pixels_size + 5 * block_count + 4 # CMF+FLG + data + 5 * (chunk_block_size + chunk_final_flag) + adler
+
+
+class ErrorHandler:
+	var error_message: String
+
+
+	func handle(_error_message) -> void:
+		error_message = _error_message

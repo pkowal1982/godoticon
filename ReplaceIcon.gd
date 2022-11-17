@@ -2,6 +2,9 @@ extends SceneTree
 
 const ICON_SIZE := 359559
 
+var error_handler: Object
+var error_callback: String
+
 
 func _init() -> void:
 	var arguments = OS.get_cmdline_args()
@@ -26,24 +29,26 @@ func _init() -> void:
 
 func replace_icon(executable_path: String, icon_path: String) -> void:
 	var icon_replacer := IconReplacer.new()
+	icon_replacer.error_handler = self
+	icon_replacer.error_callback = "print_error"
 	var file := File.new()
 	var error = file.open(icon_path, File.READ)
 	if error:
-		printerr("Could not open icon file!")
+		print_error("Could not open icon file!")
 		return
 	var images := Icon.new(file.get_buffer(ICON_SIZE)).images
 	file.close()
 
 	error = file.open(executable_path, File.READ_WRITE)
 	if error:
-		printerr("Could not open executable file!")
+		print_error("Could not open executable file!")
 		return
 	var headers := file.get_buffer(2048)
 	var resources_section_entry := icon_replacer.find_resources_section_entry(headers)
 	if not resources_section_entry:
 		return
 	if resources_section_entry.size_of_raw_data < 359559:
-		printerr("Could not find icons in executable. Wrong template?")
+		print_error("Could not find icons in executable. Wrong template?")
 		return
 
 	file.seek(resources_section_entry.pointer_to_raw_data)
@@ -54,6 +59,12 @@ func replace_icon(executable_path: String, icon_path: String) -> void:
 		file.seek(resources_section_entry.pointer_to_raw_data)
 		file.store_buffer(resources)
 	file.close()
+
+
+func print_error(error_message: String) -> void:
+	printerr(error_message)
+	if error_handler and error_callback:
+		error_handler.call(error_callback, error_message)
 
 
 class IconReplacer:
@@ -69,13 +80,16 @@ class IconReplacer:
 	const POINTER_TO_RAW_DATA_OFFSET := 0x14
 	const DATA_ENTRY_SIZE := 16
 
+	var error_handler: Object
+	var error_callback: String
+
 
 	func replace_icons(resources: PoolByteArray, rva_offset: int, images: Dictionary) -> PoolByteArray:
 		var data_entries := find_data_entries(resources)
 		for data_size in images.keys():
 			var icon_offset := find_icon_offset(data_entries, data_size, rva_offset)
 			if resources.subarray(icon_offset + 1, icon_offset + 3).get_string_from_ascii() != "PNG":
-				printerr("Wrong icon type, PNG signature missing")
+				print_error("Wrong icon type, PNG signature missing")
 				return PoolByteArray()
 			resources = replace(resources, images[data_size], icon_offset)
 		return resources
@@ -92,7 +106,7 @@ class IconReplacer:
 		var header_offset := lsb_first(headers, PE_HEADER_ADDRESS_OFFSET, 2)
 		var image_type := lsb_first(headers, header_offset + MAGIC_OFFSET, 2)
 		if not image_type == ImageType.PE32_PLUS:
-			printerr("Only PE32+ executables are handled.")
+			print_error("Only PE32+ executables are handled.")
 			return null
 		var sections_size := lsb_first(headers, header_offset + NUMBER_OF_SECTIONS_OFFSET, 2)
 		var size_of_optional_header := lsb_first(headers, header_offset + SIZE_OF_OPTIONAL_HEADER_OFFSET, 2)
@@ -130,6 +144,11 @@ class IconReplacer:
 	func parse_data_entry(resources: PoolByteArray, offset: int, data_entries: Array) -> void:
 		data_entries.append(DataEntry.new(resources.subarray(offset, offset + DATA_ENTRY_SIZE - 1)))
 
+
+	func print_error(error_message: String) -> void:
+		printerr(error_message)
+		if error_handler and error_callback:
+			error_handler.call(error_callback, error_message)
 
 	static func lsb_first(bytes: PoolByteArray, offset: int, byte_count = 4) -> int:
 		var result := 0
