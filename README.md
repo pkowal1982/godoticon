@@ -9,6 +9,8 @@ It consists of two scripts: one for generating user
 customized icon from series of png images and second
 for replacing default icon in the .exe file.
 
+[If you need GUI version of this tool, you can find it in Godot Asset Library](https://godotengine.org/asset-library/asset/1554) or on [GitHub](https://github.com/pkowal1982/godoticonplugin) 
+
 ![**Godot Icon** will work with Godot templates which were compiled with icon produced by **Godot Icon**. For now it means Godot 4 alpha 5.](https://raw.githubusercontent.com/pkowal1982/godoticon/3.x/image/disclaimer.png)
 
 Approach with rcedit is cumbersome and does not work
