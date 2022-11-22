@@ -3,6 +3,8 @@ extends SceneTree
 
 const ICON_SIZE := 359559
 
+var error_callable: Callable
+
 
 func _init() -> void:
 	var arguments = OS.get_cmdline_args()
@@ -32,14 +34,14 @@ func replace_icon(executable_path: String, icon_path: String) -> void:
 
 	var executable_file := FileAccess.open(executable_path, FileAccess.READ_WRITE)
 	if not executable_file:
-		printerr("Could not open executable file!")
+		print_error("Could not open executable file!")
 		return
 	var headers := executable_file.get_buffer(2048)
 	var resources_section_entry := icon_replacer.find_resources_section_entry(headers)
 	if not resources_section_entry:
 		return
 	if resources_section_entry.size_of_raw_data < 359559:
-		printerr("Could not find icons in executable. Wrong template?")
+		print_error("Could not find icons in executable. Wrong template?")
 		return
 
 	executable_file.seek(resources_section_entry.pointer_to_raw_data)
@@ -54,9 +56,15 @@ func replace_icon(executable_path: String, icon_path: String) -> void:
 func get_images(icon_path: String) -> Dictionary:
 	var file := FileAccess.open(icon_path, FileAccess.READ)
 	if not file:
-		printerr("Could not open icon file!\n", file.get_open_error())
+		print_error(str("Could not open icon file!\n", FileAccess.get_open_error()))
 		return {}
 	return Icon.new(file.get_buffer(ICON_SIZE)).images
+
+
+func print_error(error_message: String) -> void:
+	printerr(error_message)
+	if error_callable:
+		error_callable.call(error_message)
 
 
 class IconReplacer:
@@ -72,15 +80,17 @@ class IconReplacer:
 	const POINTER_TO_RAW_DATA_OFFSET := 0x14
 	const DATA_ENTRY_SIZE := 16
 
+	var error_callable: Callable
+
 
 	func replace_icons(resources: PackedByteArray, rva_offset: int, images: Dictionary) -> PackedByteArray:
 		var data_entries := find_data_entries(resources)
 		for data_size in images.keys():
 			var icon_offset := find_icon_offset(data_entries, data_size, rva_offset)
 			if resources.slice(icon_offset + 1, icon_offset + 4).get_string_from_ascii() != "PNG":
-				printerr("Wrong icon type, PNG signature missing")
+				print_error("Wrong icon type, PNG signature missing")
 				return PackedByteArray()
-			resources = replace(resources, images[data_size], icon_offset)
+			resources = IconReplacer.replace(resources, images[data_size], icon_offset)
 		return resources
 
 
@@ -92,13 +102,13 @@ class IconReplacer:
 
 
 	func find_resources_section_entry(headers: PackedByteArray) -> SectionEntry:
-		var header_offset := lsb_first(headers, PE_HEADER_ADDRESS_OFFSET, 2)
-		var image_type := lsb_first(headers, header_offset + MAGIC_OFFSET, 2)
+		var header_offset := IconReplacer.lsb_first(headers, PE_HEADER_ADDRESS_OFFSET, 2)
+		var image_type := IconReplacer.lsb_first(headers, header_offset + MAGIC_OFFSET, 2)
 		if not image_type == ImageType.PE32_PLUS:
-			printerr("Only PE32+ executables are handled.")
+			print_error("Only PE32+ executables are handled.")
 			return null
-		var sections_size := lsb_first(headers, header_offset + NUMBER_OF_SECTIONS_OFFSET, 2)
-		var size_of_optional_header := lsb_first(headers, header_offset + SIZE_OF_OPTIONAL_HEADER_OFFSET, 2)
+		var sections_size := IconReplacer.lsb_first(headers, header_offset + NUMBER_OF_SECTIONS_OFFSET, 2)
+		var size_of_optional_header := IconReplacer.lsb_first(headers, header_offset + SIZE_OF_OPTIONAL_HEADER_OFFSET, 2)
 		var sections_offset := header_offset + COFF_HEADER_SIZE + size_of_optional_header
 		for _i in range(sections_size):
 			var section_name  = headers.slice(sections_offset, sections_offset + 8).get_string_from_ascii()
@@ -115,7 +125,7 @@ class IconReplacer:
 
 
 	func parse_table(resources: PackedByteArray, offset: int, data_entries: Array) -> void:
-		var entry_count := lsb_first(resources, offset + 14, 2)
+		var entry_count := IconReplacer.lsb_first(resources, offset + 14, 2)
 		offset += 16
 		for _i in range(entry_count):
 			parse_entry(resources, offset, data_entries)
@@ -123,7 +133,7 @@ class IconReplacer:
 
 
 	func parse_entry(resources: PackedByteArray, offset: int, data_entries: Array) -> void:
-		var entry_offset := lsb_first(resources, offset + 4)
+		var entry_offset := IconReplacer.lsb_first(resources, offset + 4)
 		if entry_offset & 0x80000000:
 			parse_table(resources, entry_offset & 0x7fffffff, data_entries)
 		else:
@@ -132,6 +142,12 @@ class IconReplacer:
 
 	func parse_data_entry(resources: PackedByteArray, offset: int, data_entries: Array) -> void:
 		data_entries.append(DataEntry.new(resources.slice(offset, offset + DATA_ENTRY_SIZE)))
+
+
+	func print_error(error_message: String) -> void:
+		printerr(error_message)
+		if error_callable:
+			error_callable.call(error_message)
 
 
 	static func lsb_first(bytes: PackedByteArray, offset: int, byte_count = 4) -> int:

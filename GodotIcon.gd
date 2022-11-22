@@ -14,8 +14,7 @@ var resources: PackedByteArray
 func _init() -> void:
 	icon_creator = CreateIcon.IconCreator.new()
 	icon_replacer = ReplaceIcon.IconReplacer.new()
-	image = Image.new()
-	image.create_from_data(1, 1, false, Image.FORMAT_RGBA8, PackedByteArray([0x12, 0x34, 0x56, 0xff]))
+	image = Image.create_from_data(1, 1, false, Image.FORMAT_RGBA8, PackedByteArray([0x12, 0x34, 0x56, 0xff]))
 	var file := FileAccess.open("res://bin/headers.bin", FileAccess.READ)
 	assert(file)
 	headers = file.get_buffer(2048)
@@ -47,16 +46,14 @@ func _ready():
 
 
 func assert_equals(expected, actual) -> void:
-	# TODO assert with error message
-	assert(expected == actual) #, str("Expected", expected, " but found ", actual))
+	assert(expected == actual, str("Expected", expected, " but found ", actual))
 
 
 func assert_array_equals(expected: Array, actual: Array) -> void:
-	# TODO assert with error message
-	assert(expected.size() == actual.size()) #, str("Array sizes differ. Expected ", expected, " but found ", actual))
+	assert(expected.size() == actual.size(), str("Array sizes differ. Expected ", expected, " but found ", actual))
 	for i in range(expected.size()):
 		# TODO assert with error message
-		assert(expected[i] == actual[i]) #, str("Expected ", expected[i], " at index ", i, " but found ", actual[i], "\nE: ", expected, "\nA: ", actual))
+		assert(expected[i] == actual[i], str("Expected ", expected[i], " at index ", i, " but found ", actual[i], "\nE: ", expected, "\nA: ", actual))
 
 
 func test_msb_first() -> void:
@@ -209,6 +206,32 @@ func test_replace_icons() -> void:
 	assert_array_equals(images[1108], resources.slice(0x1f0, 0x1f0 + 1108))
 
 
+func test_create_icon_error_handling() -> void:
+	var error_message = "Create icon test error message!"
+	var error_handler := ErrorHandler.new()
+	var create_icon := CreateIcon.new()
+	create_icon.error_callable = error_handler.handle
+	create_icon.print_error(error_message)
+	assert_equals(error_message, error_handler.error_message)
+
+
+func test_replace_icon_error_handling() -> void:
+	var error_message = "Replace icon test error message!"
+	var error_handler := ErrorHandler.new()
+	var replace_icon := ReplaceIcon.new()
+	replace_icon.error_callable = error_handler.handle
+	replace_icon.print_error(error_message)
+	assert_equals(error_message, error_handler.error_message)
+
+
+func test_icon_replacer_error_handling() -> void:
+	var error_message = "Icon replacer test error message!"
+	var error_handler := ErrorHandler.new()
+	icon_replacer.error_callable = error_handler.handle
+	icon_replacer.print_error(error_message)
+	assert_equals(error_message, error_handler.error_message)
+
+
 func has_data_entry_with_size(data_entries: Array, size: int) -> bool:
 	for data_entry in data_entries:
 		if data_entry.size == size:
@@ -218,8 +241,17 @@ func has_data_entry_with_size(data_entries: Array, size: int) -> bool:
 
 func zlib_stream_size(size: int) -> int:
 	var filtered_pixels_size := size * size * 4 + size
-	# TODO fix type infering
+	@warning_ignore(integer_division)
 	var block_count: int = filtered_pixels_size / icon_creator.ZLIB_BLOCK_SIZE
 	if filtered_pixels_size % icon_creator.ZLIB_BLOCK_SIZE:
 		block_count += 1
 	return 2 + filtered_pixels_size + 5 * block_count + 4 # CMF+FLG + data + 5 * (chunk_block_size + chunk_final_flag) + adler
+
+
+
+class ErrorHandler:
+	var error_message: String
+
+
+	func handle(_error_message) -> void:
+		error_message = _error_message
