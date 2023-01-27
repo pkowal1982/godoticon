@@ -140,10 +140,10 @@ class IconCreator:
 
 	func generate_icon_entry(image: Image, size: int, offset: int) -> PackedByteArray:
 		var result := PackedByteArray()
-		var _ignore := result.append(image.get_width()) # width
-		_ignore = result.append(image.get_height()) # height
-		_ignore = result.append(0x0) # size of color palette
-		_ignore = result.append(0x0) # reserved
+		result.append(image.get_width()) # width
+		result.append(image.get_height()) # height
+		result.append(0x0) # size of color palette
+		result.append(0x0) # reserved
 		result.append_array(lsb_first(0, 2)) # no color planes
 		result.append_array(lsb_first(32, 2)) # bits per pixel
 		result.append_array(lsb_first(size)) # size of embedded png 
@@ -176,11 +176,11 @@ class IconCreator:
 		result.append_array(IHDR_SIGNATURE)
 		result.append_array(msb_first(width))
 		result.append_array(msb_first(height))
-		var _ignore := result.append(0x8) # bit depth
-		_ignore = result.append(0x6) # color type 32bit RGBA
-		_ignore = result.append(0x0) # compression method
-		_ignore = result.append(0x0) # filter method
-		_ignore = result.append(0x0) # interlace method
+		result.append(0x8) # bit depth
+		result.append(0x6) # color type 32bit RGBA
+		result.append(0x0) # compression method
+		result.append(0x0) # filter method
+		result.append(0x0) # interlace method
 		return result
 
 
@@ -191,16 +191,16 @@ class IconCreator:
 		var zlib_block_count := filtered_pixels.size() / ZLIB_BLOCK_SIZE + (1 if filtered_pixels.size() % ZLIB_BLOCK_SIZE else 0)
 		var result := PackedByteArray()
 		result.append_array(IDAT_SIGNATURE)
-		var _ignore := result.append(0x78) # CMF
-		_ignore = result.append(0x1) # FLG
+		result.append(0x78) # CMF
+		result.append(0x1) # FLG
 		for i in range(zlib_block_count):
 			var last_block := i == zlib_block_count - 1
-			_ignore = result.append(0x1 if last_block else 0x0)
+			result.append(0x1 if last_block else 0x0)
 			@warning_ignore(shadowed_variable)
 			var block_size := filtered_pixels.size() % ZLIB_BLOCK_SIZE if last_block else ZLIB_BLOCK_SIZE
 			result.append_array(block_size(block_size))
 			for b in range(block_size):
-				_ignore = result.append(filtered_pixels[i * ZLIB_BLOCK_SIZE + b])
+				result.append(filtered_pixels[i * ZLIB_BLOCK_SIZE + b])
 		result.append_array(msb_first(adler(filtered_pixels)))
 		return result
 
@@ -212,9 +212,9 @@ class IconCreator:
 	func filtered_pixels(width: int, height: int, pixels: PackedByteArray) -> PackedByteArray:
 		var result = PackedByteArray()
 		for row in range(height):
-			var _ignore := result.append(0x0)
+			result.append(0x0)
 			for column in range(width * 4):
-				_ignore = result.append(pixels[row * width * 4 + column])
+				result.append(pixels[row * width * 4 + column])
 		return result
 
 
@@ -250,25 +250,25 @@ class IconCreator:
 
 	func msb_first(i: int) -> PackedByteArray:
 		var result := PackedByteArray()
-		var _ignore := result.append((i >> 24) & 0xff)
-		_ignore = result.append((i >> 16) & 0xff)
-		_ignore = result.append((i >> 8) & 0xff)
-		_ignore = result.append(i & 0xff)
+		result.append((i >> 24) & 0xff)
+		result.append((i >> 16) & 0xff)
+		result.append((i >> 8) & 0xff)
+		result.append(i & 0xff)
 		return result
 
 
 	func lsb_first(i: int, size = 4) -> PackedByteArray:
 		var result := PackedByteArray()
 		for _s in range(size):
-			var _ignore := result.append(i & 0xff)
+			result.append(i & 0xff)
 			i = i >> 8
 		return result
 
 
 	func block_size(i: int) -> PackedByteArray:
 		var result := PackedByteArray()
-		var _ignore := result.append(i & 0xff)
-		_ignore = result.append((i >> 8) & 0xff)
-		_ignore = result.append((i & 0xff) ^ 0xff)
-		_ignore = result.append(((i >> 8) & 0xff) ^ 0xff)
+		result.append(i & 0xff)
+		result.append((i >> 8) & 0xff)
+		result.append((i & 0xff) ^ 0xff)
+		result.append(((i >> 8) & 0xff) ^ 0xff)
 		return result

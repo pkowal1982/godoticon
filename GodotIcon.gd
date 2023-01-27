@@ -18,7 +18,6 @@ func _init() -> void:
 	var file := FileAccess.open("res://bin/headers.bin", FileAccess.READ)
 	assert(file)
 	headers = file.get_buffer(2048)
-	# TODO should use file = null instead of close?
 	file = FileAccess.open("res://bin/resources.bin", FileAccess.READ)
 	assert(file)
 	resources = file.get_buffer(360960)
@@ -42,6 +41,7 @@ func _ready():
 		test_run_count += 1
 		method_names.erase(test_method)
 	print("Tests run: ", test_run_count, "\nMethods not run as tests: ", ", ".join(PackedStringArray(method_names)))
+	await get_tree().create_timer(0.5).timeout
 	get_tree().quit()
 
 

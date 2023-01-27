@@ -8,22 +8,6 @@
 
 config_version=5
 
-_global_script_classes=[{
-"base": "SceneTree",
-"class": &"CreateIcon",
-"language": &"GDScript",
-"path": "res://CreateIcon.gd"
-}, {
-"base": "SceneTree",
-"class": &"ReplaceIcon",
-"language": &"GDScript",
-"path": "res://ReplaceIcon.gd"
-}]
-_global_script_class_icons={
-"CreateIcon": "",
-"ReplaceIcon": ""
-}
-
 [application]
 
 config/name="Godot Icon"
