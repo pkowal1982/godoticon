@@ -185,9 +185,9 @@ class IconCreator:
 
 
 	func generate_data_chunk(image: Image) -> PackedByteArray:
-		@warning_ignore(shadowed_variable)
+		@warning_ignore("shadowed_variable")
 		var filtered_pixels := filtered_pixels(image.get_width(), image.get_height(), image.get_data())
-		@warning_ignore(integer_division)
+		@warning_ignore("integer_division")
 		var zlib_block_count := filtered_pixels.size() / ZLIB_BLOCK_SIZE + (1 if filtered_pixels.size() % ZLIB_BLOCK_SIZE else 0)
 		var result := PackedByteArray()
 		result.append_array(IDAT_SIGNATURE)
@@ -196,7 +196,7 @@ class IconCreator:
 		for i in range(zlib_block_count):
 			var last_block := i == zlib_block_count - 1
 			result.append(0x1 if last_block else 0x0)
-			@warning_ignore(shadowed_variable)
+			@warning_ignore("shadowed_variable")
 			var block_size := filtered_pixels.size() % ZLIB_BLOCK_SIZE if last_block else ZLIB_BLOCK_SIZE
 			result.append_array(block_size(block_size))
 			for b in range(block_size):

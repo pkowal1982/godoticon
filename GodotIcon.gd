@@ -241,7 +241,7 @@ func has_data_entry_with_size(data_entries: Array, size: int) -> bool:
 
 func zlib_stream_size(size: int) -> int:
 	var filtered_pixels_size := size * size * 4 + size
-	@warning_ignore(integer_division)
+	@warning_ignore("integer_division")
 	var block_count: int = filtered_pixels_size / icon_creator.ZLIB_BLOCK_SIZE
 	if filtered_pixels_size % icon_creator.ZLIB_BLOCK_SIZE:
 		block_count += 1
