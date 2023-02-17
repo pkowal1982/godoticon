@@ -7,9 +7,9 @@
    viewBox="0 0 219.60416 33.866668"
    version="1.1"
    id="svg5"
-   inkscape:version="1.2.1 (0f2f062aeb, 2022-09-21, custom)"
+   inkscape:version="1.1.2 (0a00cf5339, 2022-02-04)"
    sodipodi:docname="disclaimer.svg"
-   inkscape:export-filename="../729234f9/disclaimer.png"
+   inkscape:export-filename="/home/pkowal/godoticon4/image/disclaimer.png"
    inkscape:export-xdpi="96"
    inkscape:export-ydpi="96"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
@@ -92,7 +92,7 @@
          style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:7.05556px;font-family:Ubuntu;-inkscape-font-specification:'Ubuntu, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;stroke-width:0.264583"
          x="36.760483"
          y="27.982815"
-         id="tspan3119">means Godot 3.5+ and Godot 4 beta 2+.</tspan></text>
+         id="tspan3119">means Godot 3.5+ and Godot 4 b 2 to 6 or custom.</tspan></text>
     <path
        id="path2243"
        style="fill:none;stroke:#000000;stroke-width:2.11667;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
